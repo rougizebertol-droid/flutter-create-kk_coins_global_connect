@@ -14,132 +14,207 @@ class KkCoinsGlobalConnectApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,
-        colorSchemeSeed: const Color(0xFF1B5E20),
-        brightness: Brightness.light,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF176B45),
+          brightness: Brightness.light,
+        ),
+        scaffoldBackgroundColor: const Color(0xFFF7F9F7),
+        inputDecorationTheme: const InputDecorationTheme(
+          border: OutlineInputBorder(),
+        ),
       ),
-      home: const HomePage(),
+      home: const AppShell(),
     );
   }
 }
 
-class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+class AppShell extends StatefulWidget {
+  const AppShell({super.key});
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  State<AppShell> createState() => _AppShellState();
 }
 
-class _HomePageState extends State<HomePage> {
-  final _searchController = TextEditingController();
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
+class _AppShellState extends State<AppShell> {
+  int _selectedIndex = 0;
 
   @override
   Widget build(BuildContext context) {
+    final pages = <Widget>[
+      const HomePage(),
+      const ShipmentsPage(),
+      const AccountPage(),
+    ];
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('K.K Coins Global Connect'),
-        backgroundColor: Theme.of(context).colorScheme.primary,
-        foregroundColor: Colors.white,
+        centerTitle: false,
       ),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
+      body: SafeArea(child: pages[_selectedIndex]),
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: _selectedIndex,
+        onDestinationSelected: (index) => setState(() => _selectedIndex = index),
+        destinations: const [
+          NavigationDestination(icon: Icon(Icons.home_outlined), label: 'Home'),
+          NavigationDestination(icon: Icon(Icons.inventory_2_outlined), label: 'Shipments'),
+          NavigationDestination(icon: Icon(Icons.person_outline), label: 'Account'),
+        ],
+      ),
+    );
+  }
+}
+
+class HomePage extends StatelessWidget {
+  const HomePage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      padding: const EdgeInsets.all(20),
+      children: [
+        Container(
+          padding: const EdgeInsets.all(22),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.primary,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: const Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Marketplace and account overview',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              Icon(Icons.public, color: Colors.white, size: 34),
+              SizedBox(height: 18),
+              Text(
+                'Connect globally.',
+                style: TextStyle(color: Colors.white, fontSize: 26, fontWeight: FontWeight.bold),
               ),
-              const SizedBox(height: 12),
-              const Text(
-                'A prototype for owner approvals, transfers, and customer account access.',
-                style: TextStyle(fontSize: 16, color: Colors.black87),
-              ),
-              const SizedBox(height: 24),
-              TextField(
-                controller: _searchController,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  labelText: 'Search wallet, order, or customer',
-                  prefixIcon: Icon(Icons.search),
-                ),
-              ),
-              const SizedBox(height: 24),
-              Wrap(
-                spacing: 12,
-                runSpacing: 12,
-                children: const [
-                  ActionCard(title: 'Orders', value: '24', icon: Icons.shopping_bag),
-                  ActionCard(title: 'Wallet', value: '₦1.24M', icon: Icons.account_balance_wallet),
-                  ActionCard(title: 'Transfers', value: '06', icon: Icons.swap_horiz),
-                  ActionCard(title: 'Owners', value: '03', icon: Icons.shield_outlined),
-                ],
-              ),
-              const SizedBox(height: 28),
-              const Divider(),
-              const SizedBox(height: 12),
-              const Text(
-                'Notes',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'This is a prototype scaffold. Connect Firebase, enforce secure owner-only admin actions, and verify payment approvals before shipment.',
-                style: TextStyle(color: Colors.black54),
+              SizedBox(height: 8),
+              Text(
+                'Manage your shipment requests and stay up to date.',
+                style: TextStyle(color: Colors.white, fontSize: 15),
               ),
             ],
           ),
         ),
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Owner approval flow placeholder')),
-          );
-        },
-        icon: const Icon(Icons.check_circle_outline),
-        label: const Text('Approve'),
-      ),
+        const SizedBox(height: 24),
+        Text('Quick actions', style: Theme.of(context).textTheme.titleLarge),
+        const SizedBox(height: 12),
+        const _InfoTile(
+          icon: Icons.add_box_outlined,
+          title: 'Request a shipment',
+          subtitle: 'Start a request and provide route details.',
+        ),
+        const _InfoTile(
+          icon: Icons.track_changes_outlined,
+          title: 'Track a shipment',
+          subtitle: 'View updates for your submitted requests.',
+        ),
+        const SizedBox(height: 20),
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(Icons.info_outline, color: Theme.of(context).colorScheme.primary),
+                const SizedBox(width: 12),
+                const Expanded(
+                  child: Text(
+                    'Prototype preview. No shipment, payment, or account data is submitted or verified in this build.',
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
 
-class ActionCard extends StatelessWidget {
-  const ActionCard({
-    required this.title,
-    required this.value,
-    required this.icon,
-    super.key,
-  });
-
-  final String title;
-  final String value;
-  final IconData icon;
+class ShipmentsPage extends StatelessWidget {
+  const ShipmentsPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: 150,
-      child: Card(
-        elevation: 2,
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Icon(icon, size: 28, color: Theme.of(context).colorScheme.primary),
-              const SizedBox(height: 12),
-              Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
-              const SizedBox(height: 6),
-              Text(value, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-            ],
+    return ListView(
+      padding: const EdgeInsets.all(20),
+      children: [
+        Text('Your shipments', style: Theme.of(context).textTheme.headlineSmall),
+        const SizedBox(height: 12),
+        const Card(
+          child: Padding(
+            padding: EdgeInsets.all(20),
+            child: Column(
+              children: [
+                Icon(Icons.inventory_2_outlined, size: 42),
+                SizedBox(height: 12),
+                Text('No shipments yet', style: TextStyle(fontWeight: FontWeight.w600)),
+                SizedBox(height: 6),
+                Text('Shipment requests will appear here after account and backend setup.'),
+              ],
+            ),
           ),
+        ),
+        const SizedBox(height: 12),
+        const _InfoTile(
+          icon: Icons.verified_user_outlined,
+          title: 'Payment safety',
+          subtitle: 'A receipt or transfer reference is not proof of settled funds. The merchant must verify payment independently.',
+        ),
+      ],
+    );
+  }
+}
+
+class AccountPage extends StatelessWidget {
+  const AccountPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      padding: const EdgeInsets.all(20),
+      children: [
+        Text('Account', style: Theme.of(context).textTheme.headlineSmall),
+        const SizedBox(height: 12),
+        const _InfoTile(
+          icon: Icons.lock_outline,
+          title: 'Sign-in not configured',
+          subtitle: 'Firebase Authentication must be configured before real customer accounts can be used.',
+        ),
+        const _InfoTile(
+          icon: Icons.admin_panel_settings_outlined,
+          title: 'Owner access is restricted',
+          subtitle: 'Admin functions are intentionally unavailable in this prototype. Owner access must be verified by a trusted backend.',
+        ),
+        const SizedBox(height: 16),
+        const Text(
+          'Do not enter payment credentials, bank PINs, or passwords into this preview.',
+          style: TextStyle(color: Colors.black54),
+        ),
+      ],
+    );
+  }
+}
+
+class _InfoTile extends StatelessWidget {
+  const _InfoTile({required this.icon, required this.title, required this.subtitle});
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 10),
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        leading: Icon(icon, color: Theme.of(context).colorScheme.primary),
+        title: Text(title),
+        subtitle: Padding(
+          padding: const EdgeInsets.only(top: 5),
+          child: Text(subtitle),
         ),
       ),
     );
