@@ -66,9 +66,9 @@ class _AppEntryState extends State<AppEntry> {
   ];
 
   final List<Map<String, dynamic>> demoTransfers = [
-    {'customer': 'Chinedu A.', 'amount': '₦18,500', 'method': 'Direct transfer', 'status': 'Pending approval'},
-    {'customer': 'Grace O.', 'amount': '₦26,000', 'method': 'Direct transfer', 'status': 'Approved'},
-    {'customer': 'Musa T.', 'amount': '₦32,700', 'method': 'Direct transfer', 'status': 'Awaiting confirmation'},
+    {'customer': 'Chinedu A.', 'amount': '₦18,500', 'method': 'Moniepoint', 'status': 'Pending approval'},
+    {'customer': 'Grace O.', 'amount': '₦26,000', 'method': 'OPay', 'status': 'Approved'},
+    {'customer': 'Musa T.', 'amount': '₦32,700', 'method': 'Moniepoint', 'status': 'Awaiting confirmation'},
   ];
 
   void loginCustomer(String fullName, String email, String password) {
@@ -482,7 +482,7 @@ class CustomerHomeScreen extends StatelessWidget {
                 FilledButton.icon(
                   onPressed: () => Navigator.of(context).push(
                     MaterialPageRoute(
-                      builder: (_) => const DirectTransferScreen(),
+                      builder: (_) => const PaymentMethodScreen(),
                     ),
                   ),
                   icon: const Icon(Icons.add_circle_outline),
@@ -551,23 +551,113 @@ class CustomerHomeScreen extends StatelessWidget {
   }
 }
 
-class DirectTransferScreen extends StatelessWidget {
-  const DirectTransferScreen({super.key});
+class PaymentMethodScreen extends StatelessWidget {
+  const PaymentMethodScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Direct transfer')),
+      appBar: AppBar(title: const Text('Choose payment method')),
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
           const Text(
-            'Pay by direct transfer',
-            style: TextStyle(
-              fontSize: 26,
-              fontWeight: FontWeight.w800,
-              color: KKCoinsGlobalConnectApp.navy,
+            'How would you like to pay?',
+            style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800, color: KKCoinsGlobalConnectApp.navy),
+          ),
+          const SizedBox(height: 18),
+          PaymentOptionCard(
+            title: 'Moniepoint transfer',
+            description: 'Transfer to the Moniepoint business account and submit your proof.',
+            icon: Icons.account_balance,
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const TransferDetailsScreen(method: 'Moniepoint')),
             ),
+          ),
+          const SizedBox(height: 12),
+          PaymentOptionCard(
+            title: 'OPay transfer',
+            description: 'Transfer to the OPay business account and submit your proof.',
+            icon: Icons.business_center,
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const TransferDetailsScreen(method: 'OPay')),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class PaymentOptionCard extends StatelessWidget {
+  const PaymentOptionCard({
+    super.key,
+    required this.title,
+    required this.description,
+    required this.icon,
+    required this.onTap,
+  });
+
+  final String title;
+  final String description;
+  final IconData icon;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(18),
+      child: Container(
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(18),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 50,
+              height: 50,
+              decoration: BoxDecoration(
+                color: const Color(0xFFEAF1FC),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Icon(icon, color: KKCoinsGlobalConnectApp.blue),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: const TextStyle(fontWeight: FontWeight.w800, color: KKCoinsGlobalConnectApp.navy)),
+                  const SizedBox(height: 6),
+                  Text(description, style: const TextStyle(color: Colors.black54, height: 1.4)),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right, color: Colors.black45),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class TransferDetailsScreen extends StatelessWidget {
+  const TransferDetailsScreen({super.key, required this.method});
+  final String method;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('$method transfer')),
+      body: ListView(
+        padding: const EdgeInsets.all(20),
+        children: [
+          Text(
+            'Pay with $method',
+            style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w800, color: KKCoinsGlobalConnectApp.navy),
           ),
           const SizedBox(height: 18),
           Container(
@@ -576,52 +666,54 @@ class DirectTransferScreen extends StatelessWidget {
               color: Colors.white,
               borderRadius: BorderRadius.circular(18),
             ),
-            child: const Column(
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Bank name', style: TextStyle(color: Colors.black54)),
-                SizedBox(height: 6),
-                Text('K.K Coins Global Connect', style: TextStyle(fontWeight: FontWeight.w800, color: KKCoinsGlobalConnectApp.navy)),
-                SizedBox(height: 18),
-                Text('Account number', style: TextStyle(color: Colors.black54)),
-                SizedBox(height: 6),
-                Text('0123456789', style: TextStyle(fontWeight: FontWeight.w800, color: KKCoinsGlobalConnectApp.navy)),
-                SizedBox(height: 18),
-                Text('Amount due', style: TextStyle(color: Colors.black54)),
-                SizedBox(height: 6),
-                Text('₦18,500', style: TextStyle(fontWeight: FontWeight.w800, color: KKCoinsGlobalConnectApp.navy)),
+                const Text('Business account', style: TextStyle(color: Colors.black54)),
+                const SizedBox(height: 6),
+                Text(
+                  method == 'Moniepoint' ? 'Moniepoint business account' : 'OPay business account',
+                  style: const TextStyle(fontWeight: FontWeight.w800, color: KKCoinsGlobalConnectApp.navy),
+                ),
+                const SizedBox(height: 18),
+                const Text('Amount due', style: TextStyle(color: Colors.black54)),
+                const SizedBox(height: 6),
+                const Text('₦18,500', style: TextStyle(fontWeight: FontWeight.w800, color: KKCoinsGlobalConnectApp.navy)),
               ],
             ),
           ),
           const SizedBox(height: 20),
-          const Text('Transfer proof', style: TextStyle(fontWeight: FontWeight.w700, color: KKCoinsGlobalConnectApp.navy)),
+          const Text('Transfer reference', style: TextStyle(fontWeight: FontWeight.w700, color: KKCoinsGlobalConnectApp.navy)),
           const SizedBox(height: 12),
-          TextField(
-            decoration: const InputDecoration(
-              labelText: 'Reference or narration',
+          const TextField(
+            decoration: InputDecoration(
+              hintText: 'Enter transfer reference or narration',
               prefixIcon: Icon(Icons.receipt_long_outlined),
             ),
           ),
           const SizedBox(height: 12),
-          TextField(
+          const TextField(
             maxLines: 3,
-            decoration: const InputDecoration(
-              labelText: 'Upload proof details',
+            decoration: InputDecoration(
+              hintText: 'Add proof note or payment details',
               prefixIcon: Icon(Icons.note_alt_outlined),
             ),
           ),
           const SizedBox(height: 18),
           FilledButton(
             onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
+              ScaffoldMessenger.of(
+                Navigator.of(context).context,
+              ).showSnackBar(
                 const SnackBar(content: Text('Transfer request submitted. Owner approval is required.')),
               );
+              Navigator.of(context).pop();
             },
             style: FilledButton.styleFrom(
               backgroundColor: KKCoinsGlobalConnectApp.blue,
               padding: const EdgeInsets.all(16),
             ),
-            child: const Text('Submit proof'),
+            child: const Text('Submit payment proof'),
           ),
         ],
       ),
@@ -668,16 +760,16 @@ class OwnerPortalScreen extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: SummaryCard(label: 'Transfers', value: '17', color: KKCoinsGlobalConnectApp.gold),
+                child: SummaryCard(label: 'Moniepoint', value: '9', color: KKCoinsGlobalConnectApp.gold),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: SummaryCard(label: 'Pending', value: '6', color: const Color(0xFF27836E)),
+                child: SummaryCard(label: 'OPay', value: '8', color: const Color(0xFF27836E)),
               ),
             ],
           ),
           const SizedBox(height: 26),
-          const Text('Direct transfer approvals', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: KKCoinsGlobalConnectApp.navy)),
+          const Text('Transfer approvals', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: KKCoinsGlobalConnectApp.navy)),
           const SizedBox(height: 12),
           ...transfers.map((transfer) => Container(
                 margin: const EdgeInsets.only(bottom: 12),
