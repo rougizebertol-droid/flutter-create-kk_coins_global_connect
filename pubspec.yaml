@@ -1,7 +1,7 @@
 name: kk_coins_global_connect
-description: K.K Coins Global Connect logistics app for Android and iOS.
+description: K.K Coins Global Connect mobile app prototype
 publish_to: 'none'
-version: 0.1.0+1
+version: 1.0.0+1
 
 environment:
   sdk: '>=3.3.0 <4.0.0'
