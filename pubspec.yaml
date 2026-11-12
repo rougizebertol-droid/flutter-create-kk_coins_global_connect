@@ -1,5 +1,5 @@
 name: kk_coins_global_connect
-description: Cross-platform logistics app foundation for K.K Coins Global Connect.
+description: K.K Coins Global Connect logistics app for Android and iOS.
 publish_to: 'none'
 version: 0.1.0+1
 
@@ -10,6 +10,9 @@ dependencies:
   flutter:
     sdk: flutter
   cupertino_icons: ^1.0.8
+  firebase_core: ^3.1.0
+  firebase_auth: ^5.1.0
+  cloud_firestore: ^5.0.0
 
 dev_dependencies:
   flutter_test:

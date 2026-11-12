@@ -42,60 +42,49 @@ class KKCoinsGlobalConnectApp extends StatelessWidget {
           ),
         ),
       ),
-      home: const AuthGate(),
+      home: const AppEntry(),
     );
   }
 }
 
-class AuthGate extends StatefulWidget {
-  const AuthGate({super.key});
+class AppEntry extends StatefulWidget {
+  const AppEntry({super.key});
 
   @override
-  State<AuthGate> createState() => _AuthGateState();
+  State<AppEntry> createState() => _AppEntryState();
 }
 
-class _AuthGateState extends State<AuthGate> {
+class _AppEntryState extends State<AppEntry> {
   bool isLoggedIn = false;
   bool isOwnerPortal = false;
-  String activeName = '';
+  String currentUserName = 'Customer';
 
   final List<Map<String, dynamic>> demoBookings = [
     {'id': 'KKCG-2048', 'route': 'Lagos → Abuja', 'status': 'In transit', 'amount': '₦18,500'},
-    {'id': 'KKCG-2049', 'route': 'Abuja → Ibadan', 'status': 'Pending pickup', 'amount': '₦14,000'},
-    {'id': 'KKCG-2050', 'route': 'Lagos → Accra', 'status': 'Verified', 'amount': '₦42,000'},
+    {'id': 'KKCG-2051', 'route': 'Abuja → Ibadan', 'status': 'Pending pickup', 'amount': '₦12,200'},
+    {'id': 'KKCG-2058', 'route': 'Lagos → Accra', 'status': 'Approved', 'amount': '₦42,100'},
   ];
 
-  final List<Map<String, dynamic>> ownerTransfers = [
+  final List<Map<String, dynamic>> demoTransfers = [
     {'customer': 'Chinedu A.', 'amount': '₦18,500', 'method': 'Direct transfer', 'status': 'Pending approval'},
     {'customer': 'Grace O.', 'amount': '₦26,000', 'method': 'Direct transfer', 'status': 'Approved'},
     {'customer': 'Musa T.', 'amount': '₦32,700', 'method': 'Direct transfer', 'status': 'Awaiting confirmation'},
   ];
 
-  void onCustomerSignup(String name, String email, String phone, String password) {
-    if (name.trim().isEmpty || email.trim().isEmpty || password.trim().isEmpty) {
+  void loginCustomer(String fullName, String email, String password) {
+    if (fullName.trim().isEmpty || email.trim().isEmpty || password.trim().isEmpty) {
       return;
     }
     setState(() {
-      activeName = name.trim();
+      currentUserName = fullName.trim();
       isLoggedIn = true;
       isOwnerPortal = false;
     });
   }
 
-  void onCustomerLogin(String email, String password) {
-    if (email.trim().isEmpty || password.trim().isEmpty) {
-      return;
-    }
+  void loginOwner() {
     setState(() {
-      activeName = 'Customer User';
-      isLoggedIn = true;
-      isOwnerPortal = false;
-    });
-  }
-
-  void onOwnerLogin() {
-    setState(() {
-      activeName = 'CEO Owner';
+      currentUserName = 'CEO Owner';
       isLoggedIn = true;
       isOwnerPortal = true;
     });
@@ -105,7 +94,7 @@ class _AuthGateState extends State<AuthGate> {
     setState(() {
       isLoggedIn = false;
       isOwnerPortal = false;
-      activeName = '';
+      currentUserName = 'Customer';
     });
   }
 
@@ -113,26 +102,32 @@ class _AuthGateState extends State<AuthGate> {
   Widget build(BuildContext context) {
     if (!isLoggedIn) {
       return WelcomeScreen(
-        onCustomerSignUp: () => Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => SignUpScreen(onSubmit: onCustomerSignup)),
+        onCustomerSignup: () => Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => SignUpScreen(onSubmit: loginCustomer),
+          ),
         ),
         onCustomerLogin: () => Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => LoginScreen(onLogin: onCustomerLogin)),
+          MaterialPageRoute(
+            builder: (_) => LoginScreen(onLogin: (email, password) {
+              loginCustomer('Customer User', email, password);
+            }),
+          ),
         ),
-        onOwnerLogin: onOwnerLogin,
+        onOwnerLogin: loginOwner,
       );
     }
 
     if (isOwnerPortal) {
-      return OwnerDashboardScreen(
-        username: activeName,
-        transfers: ownerTransfers,
+      return OwnerPortalScreen(
+        username: currentUserName,
+        transfers: demoTransfers,
         onLogout: logout,
       );
     }
 
-    return CustomerDashboardScreen(
-      username: activeName,
+    return CustomerHomeScreen(
+      username: currentUserName,
       bookings: demoBookings,
       onLogout: logout,
     );
@@ -142,12 +137,12 @@ class _AuthGateState extends State<AuthGate> {
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({
     super.key,
-    required this.onCustomerSignUp,
+    required this.onCustomerSignup,
     required this.onCustomerLogin,
     required this.onOwnerLogin,
   });
 
-  final VoidCallback onCustomerSignUp;
+  final VoidCallback onCustomerSignup;
   final VoidCallback onCustomerLogin;
   final VoidCallback onOwnerLogin;
 
@@ -161,10 +156,10 @@ class WelcomeScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 30),
+              const SizedBox(height: 24),
               Row(
                 children: const [
-                  BrandMark(size: 46),
+                  BrandMark(size: 48),
                   SizedBox(width: 12),
                   Expanded(
                     child: Column(
@@ -185,7 +180,7 @@ class WelcomeScreen extends StatelessWidget {
                   )
                 ],
               ),
-              const SizedBox(height: 34),
+              const SizedBox(height: 20),
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(22),
@@ -218,7 +213,7 @@ class WelcomeScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 18),
                     const Text(
-                      'Secure logistics for people, businesses, and global delivery.',
+                      'Send with confidence. Deliver worldwide.',
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 28,
@@ -226,9 +221,9 @@ class WelcomeScreen extends StatelessWidget {
                         height: 1.15,
                       ),
                     ),
-                    const SizedBox(height: 14),
+                    const SizedBox(height: 10),
                     Text(
-                      'From local delivery to worldwide luggage and parcel movement, K.K Coins Global Connect helps people manage logistics with confidence.',
+                      'Luggage, parcels, and business goods supported by a trusted delivery network.',
                       style: TextStyle(
                         color: Colors.white.withOpacity(.82),
                         height: 1.45,
@@ -250,7 +245,7 @@ class WelcomeScreen extends StatelessWidget {
               SizedBox(
                 width: double.infinity,
                 child: FilledButton(
-                  onPressed: onCustomerSignUp,
+                  onPressed: onCustomerSignup,
                   style: FilledButton.styleFrom(
                     backgroundColor: KKCoinsGlobalConnectApp.blue,
                     padding: const EdgeInsets.all(16),
@@ -280,7 +275,7 @@ class WelcomeScreen extends StatelessWidget {
                     foregroundColor: KKCoinsGlobalConnectApp.navy,
                     padding: const EdgeInsets.all(16),
                   ),
-                  child: const Text('CEO / owner portal'),
+                  child: const Text('CEO / admin portal'),
                 ),
               ),
             ],
@@ -293,7 +288,7 @@ class WelcomeScreen extends StatelessWidget {
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key, required this.onSubmit});
-  final void Function(String name, String email, String phone, String password) onSubmit;
+  final void Function(String fullName, String email, String password) onSubmit;
 
   @override
   State<SignUpScreen> createState() => _SignUpScreenState();
@@ -302,14 +297,12 @@ class SignUpScreen extends StatefulWidget {
 class _SignUpScreenState extends State<SignUpScreen> {
   final nameController = TextEditingController();
   final emailController = TextEditingController();
-  final phoneController = TextEditingController();
   final passwordController = TextEditingController();
 
   @override
   void dispose() {
     nameController.dispose();
     emailController.dispose();
-    phoneController.dispose();
     passwordController.dispose();
     super.dispose();
   }
@@ -321,22 +314,45 @@ class _SignUpScreenState extends State<SignUpScreen> {
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
-          const Text('Create your K.K Coins account', style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800, color: KKCoinsGlobalConnectApp.navy)),
+          const Text(
+            'Create your K.K Coins account',
+            style: TextStyle(
+              fontSize: 26,
+              fontWeight: FontWeight.w800,
+              color: KKCoinsGlobalConnectApp.navy,
+            ),
+          ),
           const SizedBox(height: 20),
-          TextField(controller: nameController, decoration: const InputDecoration(labelText: 'Full name', prefixIcon: Icon(Icons.person_outline))),
+          TextField(
+            controller: nameController,
+            decoration: const InputDecoration(
+              labelText: 'Full name',
+              prefixIcon: Icon(Icons.person_outline),
+            ),
+          ),
           const SizedBox(height: 14),
-          TextField(controller: emailController, decoration: const InputDecoration(labelText: 'Email address', prefixIcon: Icon(Icons.email_outlined))),
+          TextField(
+            controller: emailController,
+            decoration: const InputDecoration(
+              labelText: 'Email address',
+              prefixIcon: Icon(Icons.email_outlined),
+            ),
+          ),
           const SizedBox(height: 14),
-          TextField(controller: phoneController, decoration: const InputDecoration(labelText: 'Phone number', prefixIcon: Icon(Icons.phone_outlined))),
-          const SizedBox(height: 14),
-          TextField(controller: passwordController, obscureText: true, decoration: const InputDecoration(labelText: 'Password', prefixIcon: Icon(Icons.lock_outline))),
+          TextField(
+            controller: passwordController,
+            obscureText: true,
+            decoration: const InputDecoration(
+              labelText: 'Password',
+              prefixIcon: Icon(Icons.lock_outline),
+            ),
+          ),
           const SizedBox(height: 22),
           FilledButton(
             onPressed: () {
               widget.onSubmit(
                 nameController.text,
                 emailController.text,
-                phoneController.text,
                 passwordController.text,
               );
               Navigator.of(context).pop();
@@ -379,11 +395,31 @@ class _LoginScreenState extends State<LoginScreen> {
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
-          const Text('Welcome back', style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800, color: KKCoinsGlobalConnectApp.navy)),
+          const Text(
+            'Welcome back',
+            style: TextStyle(
+              fontSize: 26,
+              fontWeight: FontWeight.w800,
+              color: KKCoinsGlobalConnectApp.navy,
+            ),
+          ),
           const SizedBox(height: 20),
-          TextField(controller: emailController, decoration: const InputDecoration(labelText: 'Email address', prefixIcon: Icon(Icons.email_outlined))),
+          TextField(
+            controller: emailController,
+            decoration: const InputDecoration(
+              labelText: 'Email address',
+              prefixIcon: Icon(Icons.email_outlined),
+            ),
+          ),
           const SizedBox(height: 14),
-          TextField(controller: passwordController, obscureText: true, decoration: const InputDecoration(labelText: 'Password', prefixIcon: Icon(Icons.lock_outline))),
+          TextField(
+            controller: passwordController,
+            obscureText: true,
+            decoration: const InputDecoration(
+              labelText: 'Password',
+              prefixIcon: Icon(Icons.lock_outline),
+            ),
+          ),
           const SizedBox(height: 22),
           FilledButton(
             onPressed: () {
@@ -402,8 +438,8 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 }
 
-class CustomerDashboardScreen extends StatelessWidget {
-  const CustomerDashboardScreen({
+class CustomerHomeScreen extends StatelessWidget {
+  const CustomerHomeScreen({
     super.key,
     required this.username,
     required this.bookings,
@@ -444,16 +480,30 @@ class CustomerDashboardScreen extends StatelessWidget {
                 const Text('₦250,000', style: TextStyle(color: Colors.white, fontSize: 30, fontWeight: FontWeight.w800)),
                 const SizedBox(height: 16),
                 FilledButton.icon(
-                  onPressed: () {},
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const DirectTransferScreen(),
+                    ),
+                  ),
                   icon: const Icon(Icons.add_circle_outline),
-                  style: FilledButton.styleFrom(backgroundColor: KKCoinsGlobalConnectApp.gold, foregroundColor: KKCoinsGlobalConnectApp.navy),
-                  label: const Text('Send package'),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: KKCoinsGlobalConnectApp.gold,
+                    foregroundColor: KKCoinsGlobalConnectApp.navy,
+                  ),
+                  label: const Text('Book a delivery'),
                 ),
               ],
             ),
           ),
           const SizedBox(height: 24),
-          const Text('Recent shipments', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: KKCoinsGlobalConnectApp.navy)),
+          const Text(
+            'Recent shipments',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w800,
+              color: KKCoinsGlobalConnectApp.navy,
+            ),
+          ),
           const SizedBox(height: 12),
           ...bookings.map((item) => Container(
                 margin: const EdgeInsets.only(bottom: 12),
@@ -501,8 +551,86 @@ class CustomerDashboardScreen extends StatelessWidget {
   }
 }
 
-class OwnerDashboardScreen extends StatelessWidget {
-  const OwnerDashboardScreen({
+class DirectTransferScreen extends StatelessWidget {
+  const DirectTransferScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Direct transfer')),
+      body: ListView(
+        padding: const EdgeInsets.all(20),
+        children: [
+          const Text(
+            'Pay by direct transfer',
+            style: TextStyle(
+              fontSize: 26,
+              fontWeight: FontWeight.w800,
+              color: KKCoinsGlobalConnectApp.navy,
+            ),
+          ),
+          const SizedBox(height: 18),
+          Container(
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(18),
+            ),
+            child: const Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Bank name', style: TextStyle(color: Colors.black54)),
+                SizedBox(height: 6),
+                Text('K.K Coins Global Connect', style: TextStyle(fontWeight: FontWeight.w800, color: KKCoinsGlobalConnectApp.navy)),
+                SizedBox(height: 18),
+                Text('Account number', style: TextStyle(color: Colors.black54)),
+                SizedBox(height: 6),
+                Text('0123456789', style: TextStyle(fontWeight: FontWeight.w800, color: KKCoinsGlobalConnectApp.navy)),
+                SizedBox(height: 18),
+                Text('Amount due', style: TextStyle(color: Colors.black54)),
+                SizedBox(height: 6),
+                Text('₦18,500', style: TextStyle(fontWeight: FontWeight.w800, color: KKCoinsGlobalConnectApp.navy)),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+          const Text('Transfer proof', style: TextStyle(fontWeight: FontWeight.w700, color: KKCoinsGlobalConnectApp.navy)),
+          const SizedBox(height: 12),
+          TextField(
+            decoration: const InputDecoration(
+              labelText: 'Reference or narration',
+              prefixIcon: Icon(Icons.receipt_long_outlined),
+            ),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            maxLines: 3,
+            decoration: const InputDecoration(
+              labelText: 'Upload proof details',
+              prefixIcon: Icon(Icons.note_alt_outlined),
+            ),
+          ),
+          const SizedBox(height: 18),
+          FilledButton(
+            onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Transfer request submitted. Owner approval is required.')),
+              );
+            },
+            style: FilledButton.styleFrom(
+              backgroundColor: KKCoinsGlobalConnectApp.blue,
+              padding: const EdgeInsets.all(16),
+            ),
+            child: const Text('Submit proof'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class OwnerPortalScreen extends StatelessWidget {
+  const OwnerPortalScreen({
     super.key,
     required this.username,
     required this.transfers,
@@ -656,86 +784,3 @@ class BrandMark extends StatelessWidget {
     );
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

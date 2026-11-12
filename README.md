@@ -1,19 +1,34 @@
 # K.K Coins Global Connect
 
-Flutter starter app for a cross-platform logistics experience for Android and iOS.
+A simple, professional Flutter foundation for a logistics app for Android and iOS.
 
-## Included
-- Royal blue, gold, and white brand theme
-- Home dashboard with service shortcuts
-- Booking form prototype
-- Tracking screen with sample shipment status
-- Account screen placeholder
-- Bottom navigation
+## Recommended production setup
+This app is structured to support the best simple method for a launch-ready product:
+- Flutter app for Android and iOS
+- Firebase Authentication for customer sign up and login
+- Firestore for users, shipments, and transfer records
+- Owner/admin dashboard to approve direct-transfer payments
+
+## Important
+Do not store passwords, private API keys, payment credentials, or signing keys in this repository.
+Keep all sensitive values in secure Firebase config, environment variables, or your own private deployment settings.
 
 ## Run locally
-1. Install Flutter and verify setup with `flutter doctor`.
-2. Clone this repository and switch to `feature/kkcg-flutter-foundation`.
+1. Install Flutter and ensure `flutter doctor` passes.
+2. Clone the repo and switch to `feature/auth-and-owner-portal`.
 3. Run `flutter pub get`.
-4. Run `flutter run` on an Android or iOS simulator/device.
+4. Run `flutter run`.
 
-This is a UI foundation only. Authentication, live tracking, payments, cloud data, and production dispatch workflows are not connected yet. Configure those with your own backend and provider accounts; never commit secrets, passwords, API keys, or signing credentials to the repository.
+## Workflows included in this prototype
+- Welcome screen and access switch
+- Customer sign up and login UI
+- Owner / CEO portal screen
+- Shipment list dashboard
+- Direct transfer approval flow
+
+## Production next steps
+- Connect Firebase Auth and Firestore
+- Add role-based security rules for customer and owner roles
+- Add payment proof upload and approval workflow
+- Add order creation, tracking, and admin reporting
+- Prepare Android and iOS release configuration
