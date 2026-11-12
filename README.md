@@ -1,34 +1,27 @@
 # K.K Coins Global Connect
 
-A simple, professional Flutter foundation for a logistics app for Android and iOS.
+Flutter application prototype for K.K Coins Global Connect.
 
-## Recommended production setup
-This app is structured to support the best simple method for a launch-ready product:
-- Flutter app for Android and iOS
-- Firebase Authentication for customer sign up and login
-- Firestore for users, shipments, and transfer records
-- Owner/admin dashboard to approve direct-transfer payments
+## Brand and platform identity
 
-## Important
-Do not store passwords, private API keys, payment credentials, or signing keys in this repository.
-Keep all sensitive values in secure Firebase config, environment variables, or your own private deployment settings.
+- Display name: `K.K Coins Global Connect`
+- Flutter package name: `kk_coins_global_connect`
+- Android application ID: `com.morluto.kkcoinsglobalconnect`
+- iOS bundle identifier: `com.morluto.kkcoinsglobalconnect`
+
+See [APP_CONFIGURATION.md](APP_CONFIGURATION.md) for platform setup, Firebase configuration, release preparation, and safety notes.
+
+## Current status
+
+This repository contains an app prototype and Firebase setup scaffolding. It is not yet a release-ready app: Firebase platform configuration, real authentication wiring, trusted admin backend, and platform release files must be completed and tested. Transfer receipts and references are unverified claims; do not treat them as payment confirmation.
 
 ## Run locally
-1. Install Flutter and ensure `flutter doctor` passes.
-2. Clone the repo and switch to `feature/auth-and-owner-portal`.
-3. Run `flutter pub get`.
-4. Run `flutter run`.
 
-## Workflows included in this prototype
-- Welcome screen and access switch
-- Customer sign up and login UI
-- Owner / CEO portal screen
-- Shipment list dashboard
-- Direct transfer approval flow
+From the Flutter project directory, run:
 
-## Production next steps
-- Connect Firebase Auth and Firestore
-- Add role-based security rules for customer and owner roles
-- Add payment proof upload and approval workflow
-- Add order creation, tracking, and admin reporting
-- Prepare Android and iOS release configuration
+```bash
+flutter pub get
+flutter run
+```
+
+Configure Firebase for your own project with FlutterFire CLI before enabling Firebase-backed features. Do not commit service-account credentials, bank details, signing keys, or passwords.
