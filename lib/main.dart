@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
-void main() => runApp(const KKCoinsApp());
+void main() => runApp(const KKCoinsGlobalConnectApp());
 
-class KKCoinsApp extends StatelessWidget {
-  const KKCoinsApp({super.key});
+class KKCoinsGlobalConnectApp extends StatelessWidget {
+  const KKCoinsGlobalConnectApp({super.key});
 
   static const navy = Color(0xFF102B5C);
   static const blue = Color(0xFF174A9C);
@@ -11,485 +11,620 @@ class KKCoinsApp extends StatelessWidget {
   static const pale = Color(0xFFF4F7FC);
 
   @override
-  Widget build(BuildContext context) => MaterialApp(
-        title: 'K.K Coins Global Connect',
-        debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          useMaterial3: true,
-          scaffoldBackgroundColor: pale,
-          colorScheme: ColorScheme.fromSeed(seedColor: blue).copyWith(
-            primary: blue,
-            secondary: gold,
-            surface: Colors.white,
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'K.K Coins Global Connect',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        useMaterial3: true,
+        scaffoldBackgroundColor: pale,
+        colorScheme: ColorScheme.fromSeed(seedColor: blue).copyWith(
+          primary: blue,
+          secondary: gold,
+          surface: Colors.white,
+        ),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: pale,
+          foregroundColor: navy,
+          elevation: 0,
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: Colors.white,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
           ),
-          appBarTheme: const AppBarTheme(
-            backgroundColor: pale,
-            foregroundColor: navy,
-            elevation: 0,
-          ),
-          inputDecorationTheme: InputDecorationTheme(
-            filled: true,
-            fillColor: Colors.white,
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14),
-              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14),
-              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-            ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
           ),
         ),
-        home: const MainNavigation(),
-      );
+      ),
+      home: const AuthGate(),
+    );
+  }
 }
 
-class MainNavigation extends StatefulWidget {
-  const MainNavigation({super.key});
+class AuthGate extends StatefulWidget {
+  const AuthGate({super.key});
 
   @override
-  State<MainNavigation> createState() => _MainNavigationState();
+  State<AuthGate> createState() => _AuthGateState();
 }
 
-class _MainNavigationState extends State<MainNavigation> {
-  int selectedIndex = 0;
+class _AuthGateState extends State<AuthGate> {
+  bool isLoggedIn = false;
+  bool isOwnerPortal = false;
+  String activeName = '';
+
+  final List<Map<String, dynamic>> demoBookings = [
+    {'id': 'KKCG-2048', 'route': 'Lagos → Abuja', 'status': 'In transit', 'amount': '₦18,500'},
+    {'id': 'KKCG-2049', 'route': 'Abuja → Ibadan', 'status': 'Pending pickup', 'amount': '₦14,000'},
+    {'id': 'KKCG-2050', 'route': 'Lagos → Accra', 'status': 'Verified', 'amount': '₦42,000'},
+  ];
+
+  final List<Map<String, dynamic>> ownerTransfers = [
+    {'customer': 'Chinedu A.', 'amount': '₦18,500', 'method': 'Direct transfer', 'status': 'Pending approval'},
+    {'customer': 'Grace O.', 'amount': '₦26,000', 'method': 'Direct transfer', 'status': 'Approved'},
+    {'customer': 'Musa T.', 'amount': '₦32,700', 'method': 'Direct transfer', 'status': 'Awaiting confirmation'},
+  ];
+
+  void onCustomerSignup(String name, String email, String phone, String password) {
+    if (name.trim().isEmpty || email.trim().isEmpty || password.trim().isEmpty) {
+      return;
+    }
+    setState(() {
+      activeName = name.trim();
+      isLoggedIn = true;
+      isOwnerPortal = false;
+    });
+  }
+
+  void onCustomerLogin(String email, String password) {
+    if (email.trim().isEmpty || password.trim().isEmpty) {
+      return;
+    }
+    setState(() {
+      activeName = 'Customer User';
+      isLoggedIn = true;
+      isOwnerPortal = false;
+    });
+  }
+
+  void onOwnerLogin() {
+    setState(() {
+      activeName = 'CEO Owner';
+      isLoggedIn = true;
+      isOwnerPortal = true;
+    });
+  }
+
+  void logout() {
+    setState(() {
+      isLoggedIn = false;
+      isOwnerPortal = false;
+      activeName = '';
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    final pages = [
-      HomeScreen(
-        onBook: () => setState(() => selectedIndex = 1),
-        onTrack: () => setState(() => selectedIndex = 2),
-      ),
-      const BookingScreen(),
-      const TrackingScreen(),
-      const AccountScreen(),
-    ];
+    if (!isLoggedIn) {
+      return WelcomeScreen(
+        onCustomerSignUp: () => Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => SignUpScreen(onSubmit: onCustomerSignup)),
+        ),
+        onCustomerLogin: () => Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => LoginScreen(onLogin: onCustomerLogin)),
+        ),
+        onOwnerLogin: onOwnerLogin,
+      );
+    }
+
+    if (isOwnerPortal) {
+      return OwnerDashboardScreen(
+        username: activeName,
+        transfers: ownerTransfers,
+        onLogout: logout,
+      );
+    }
+
+    return CustomerDashboardScreen(
+      username: activeName,
+      bookings: demoBookings,
+      onLogout: logout,
+    );
+  }
+}
+
+class WelcomeScreen extends StatelessWidget {
+  const WelcomeScreen({
+    super.key,
+    required this.onCustomerSignUp,
+    required this.onCustomerLogin,
+    required this.onOwnerLogin,
+  });
+
+  final VoidCallback onCustomerSignUp;
+  final VoidCallback onCustomerLogin;
+  final VoidCallback onOwnerLogin;
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(child: IndexedStack(index: selectedIndex, children: pages)),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: selectedIndex,
-        onDestinationSelected: (index) => setState(() => selectedIndex = index),
-        destinations: const [
-          NavigationDestination(
-              icon: Icon(Icons.home_outlined),
-              selectedIcon: Icon(Icons.home),
-              label: 'Home'),
-          NavigationDestination(
-              icon: Icon(Icons.add_box_outlined),
-              selectedIcon: Icon(Icons.add_box),
-              label: 'Send'),
-          NavigationDestination(
-              icon: Icon(Icons.location_searching), label: 'Track'),
-          NavigationDestination(
-              icon: Icon(Icons.person_outline),
-              selectedIcon: Icon(Icons.person),
-              label: 'Account'),
+      backgroundColor: KKCoinsGlobalConnectApp.pale,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 30),
+              Row(
+                children: const [
+                  BrandMark(size: 46),
+                  SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('K.K COINS',
+                            style: TextStyle(
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 1.1,
+                                color: KKCoinsGlobalConnectApp.navy)),
+                        Text('GLOBAL CONNECT',
+                            style: TextStyle(
+                                fontSize: 11,
+                                letterSpacing: 1.4,
+                                color: KKCoinsGlobalConnectApp.blue)),
+                      ],
+                    ),
+                  )
+                ],
+              ),
+              const SizedBox(height: 34),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(22),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(24),
+                  gradient: const LinearGradient(
+                    colors: [KKCoinsGlobalConnectApp.navy, KKCoinsGlobalConnectApp.blue],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(.14),
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                      child: const Text(
+                        'YOUR GLOBAL DELIVERY PARTNER',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          letterSpacing: 1.1,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+                    const Text(
+                      'Secure logistics for people, businesses, and global delivery.',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 28,
+                        fontWeight: FontWeight.w800,
+                        height: 1.15,
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    Text(
+                      'From local delivery to worldwide luggage and parcel movement, K.K Coins Global Connect helps people manage logistics with confidence.',
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(.82),
+                        height: 1.45,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 28),
+              const Text(
+                'Access the app',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
+                  color: KKCoinsGlobalConnectApp.navy,
+                ),
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: onCustomerSignUp,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: KKCoinsGlobalConnectApp.blue,
+                    padding: const EdgeInsets.all(16),
+                  ),
+                  child: const Text('Create account'),
+                ),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  onPressed: onCustomerLogin,
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.all(16),
+                    side: const BorderSide(color: KKCoinsGlobalConnectApp.blue),
+                  ),
+                  child: const Text('Login'),
+                ),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.tonal(
+                  onPressed: onOwnerLogin,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: KKCoinsGlobalConnectApp.gold,
+                    foregroundColor: KKCoinsGlobalConnectApp.navy,
+                    padding: const EdgeInsets.all(16),
+                  ),
+                  child: const Text('CEO / owner portal'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class SignUpScreen extends StatefulWidget {
+  const SignUpScreen({super.key, required this.onSubmit});
+  final void Function(String name, String email, String phone, String password) onSubmit;
+
+  @override
+  State<SignUpScreen> createState() => _SignUpScreenState();
+}
+
+class _SignUpScreenState extends State<SignUpScreen> {
+  final nameController = TextEditingController();
+  final emailController = TextEditingController();
+  final phoneController = TextEditingController();
+  final passwordController = TextEditingController();
+
+  @override
+  void dispose() {
+    nameController.dispose();
+    emailController.dispose();
+    phoneController.dispose();
+    passwordController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Create account')),
+      body: ListView(
+        padding: const EdgeInsets.all(20),
+        children: [
+          const Text('Create your K.K Coins account', style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800, color: KKCoinsGlobalConnectApp.navy)),
+          const SizedBox(height: 20),
+          TextField(controller: nameController, decoration: const InputDecoration(labelText: 'Full name', prefixIcon: Icon(Icons.person_outline))),
+          const SizedBox(height: 14),
+          TextField(controller: emailController, decoration: const InputDecoration(labelText: 'Email address', prefixIcon: Icon(Icons.email_outlined))),
+          const SizedBox(height: 14),
+          TextField(controller: phoneController, decoration: const InputDecoration(labelText: 'Phone number', prefixIcon: Icon(Icons.phone_outlined))),
+          const SizedBox(height: 14),
+          TextField(controller: passwordController, obscureText: true, decoration: const InputDecoration(labelText: 'Password', prefixIcon: Icon(Icons.lock_outline))),
+          const SizedBox(height: 22),
+          FilledButton(
+            onPressed: () {
+              widget.onSubmit(
+                nameController.text,
+                emailController.text,
+                phoneController.text,
+                passwordController.text,
+              );
+              Navigator.of(context).pop();
+            },
+            style: FilledButton.styleFrom(
+              backgroundColor: KKCoinsGlobalConnectApp.blue,
+              padding: const EdgeInsets.all(16),
+            ),
+            child: const Text('Create account'),
+          ),
         ],
       ),
     );
   }
 }
 
-class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key, required this.onBook, required this.onTrack});
-  final VoidCallback onBook;
-  final VoidCallback onTrack;
+class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key, required this.onLogin});
+  final void Function(String email, String password) onLogin;
 
   @override
-  Widget build(BuildContext context) => ListView(
-        padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
-        children: [
-          Row(children: [
-            const BrandMark(size: 48),
-            const SizedBox(width: 12),
-            const Expanded(
-              child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('K.K COINS',
-                        style: TextStyle(
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 1.1,
-                            color: KKCoinsApp.navy)),
-                    Text('GLOBAL CONNECT',
-                        style: TextStyle(
-                            fontSize: 11,
-                            letterSpacing: 1.4,
-                            color: KKCoinsApp.blue)),
-                  ]),
-            ),
-            IconButton(
-                onPressed: () {},
-                icon: const Icon(Icons.notifications_none_rounded,
-                    color: KKCoinsApp.navy)),
-          ]),
-          const SizedBox(height: 24),
-          Container(
-            padding: const EdgeInsets.all(22),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(24),
-              gradient: const LinearGradient(
-                  colors: [KKCoinsApp.navy, KKCoinsApp.blue],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight),
-            ),
-            child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
-                    decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(.14),
-                        borderRadius: BorderRadius.circular(30)),
-                    child: const Text('YOUR GLOBAL DELIVERY PARTNER',
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 10,
-                            letterSpacing: 1.1,
-                            fontWeight: FontWeight.w700)),
-                  ),
-                  const SizedBox(height: 18),
-                  const Text('Send with confidence.\nDeliver worldwide.',
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 25,
-                          height: 1.18,
-                          fontWeight: FontWeight.w800)),
-                  const SizedBox(height: 10),
-                  Text(
-                      'Luggage, parcels and business goods—connected from Nigeria to the world.',
-                      style: TextStyle(
-                          color: Colors.white.withOpacity(.82), height: 1.45)),
-                  const SizedBox(height: 20),
-                  FilledButton.icon(
-                    onPressed: onBook,
-                    icon: const Icon(Icons.arrow_forward_rounded),
-                    label: const Text('Book a delivery'),
-                    style: FilledButton.styleFrom(
-                        backgroundColor: KKCoinsApp.gold,
-                        foregroundColor: KKCoinsApp.navy,
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 17, vertical: 14)),
-                  ),
-                ]),
-          ),
-          const SizedBox(height: 25),
-          const SectionHeading(
-              title: 'What do you need today?',
-              subtitle: 'Simple logistics, all in one place'),
-          const SizedBox(height: 13),
-          Row(children: [
-            Expanded(
-                child: ServiceCard(
-                    icon: Icons.local_shipping_outlined,
-                    title: 'Send a parcel',
-                    color: KKCoinsApp.blue,
-                    onTap: onBook)),
-            const SizedBox(width: 12),
-            Expanded(
-                child: ServiceCard(
-                    icon: Icons.luggage_outlined,
-                    title: 'Send luggage',
-                    color: KKCoinsApp.gold,
-                    onTap: onBook)),
-          ]),
-          const SizedBox(height: 12),
-          Row(children: [
-            Expanded(
-                child: ServiceCard(
-                    icon: Icons.storefront_outlined,
-                    title: 'Business delivery',
-                    color: const Color(0xFF27836E),
-                    onTap: onBook)),
-            const SizedBox(width: 12),
-            Expanded(
-                child: ServiceCard(
-                    icon: Icons.travel_explore_outlined,
-                    title: 'Track shipment',
-                    color: const Color(0xFF7755B5),
-                    onTap: onTrack)),
-          ]),
-          const SizedBox(height: 24),
-          const SectionHeading(
-              title: 'Your recent shipment', subtitle: 'Sample preview'),
-          const SizedBox(height: 12),
-          Card(
-            elevation: 0,
-            color: Colors.white,
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(18)),
-            child: const Padding(
-              padding: EdgeInsets.all(16),
-              child: Row(children: [
-                DecoratedBox(
-                  decoration: BoxDecoration(
-                      color: Color(0xFFEAF1FC),
-                      borderRadius: BorderRadius.all(Radius.circular(14))),
-                  child: SizedBox(
-                      width: 46,
-                      height: 46,
-                      child: Icon(Icons.inventory_2_outlined,
-                          color: KKCoinsApp.blue)),
-                ),
-                SizedBox(width: 13),
-                Expanded(
-                    child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                      Text('Lagos → Abuja',
-                          style: TextStyle(
-                              fontWeight: FontWeight.w700,
-                              color: KKCoinsApp.navy)),
-                      SizedBox(height: 4),
-                      Text('KKCG-2048 • In transit',
-                          style: TextStyle(color: Colors.black54, fontSize: 12)),
-                    ])),
-                Icon(Icons.chevron_right, color: Colors.black45),
-              ]),
-            ),
-          ),
-        ],
-      );
+  State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class BookingScreen extends StatefulWidget {
-  const BookingScreen({super.key});
-  @override
-  State<BookingScreen> createState() => _BookingScreenState();
-}
-
-class _BookingScreenState extends State<BookingScreen> {
-  final formKey = GlobalKey<FormState>();
-  String service = 'Parcel';
-
-  @override
-  Widget build(BuildContext context) => ListView(
-        padding: const EdgeInsets.all(20),
-        children: [
-          const ScreenTitle(
-              title: 'Book a delivery',
-              subtitle: 'Tell us where your shipment needs to go.'),
-          const SizedBox(height: 22),
-          Form(
-            key: formKey,
-            child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const FieldLabel('Shipment type'),
-                  DropdownButtonFormField<String>(
-                    value: service,
-                    decoration: const InputDecoration(),
-                    items: const ['Parcel', 'Luggage', 'Business goods']
-                        .map((item) => DropdownMenuItem(
-                            value: item, child: Text(item)))
-                        .toList(),
-                    onChanged: (value) =>
-                        setState(() => service = value ?? 'Parcel'),
-                  ),
-                  const SizedBox(height: 17),
-                  const FieldLabel('Pickup location'),
-                  TextFormField(
-                      decoration: const InputDecoration(
-                          hintText: 'City, area or full address',
-                          prefixIcon: Icon(Icons.trip_origin)),
-                      validator: requiredField),
-                  const SizedBox(height: 17),
-                  const FieldLabel('Delivery destination'),
-                  TextFormField(
-                      decoration: const InputDecoration(
-                          hintText: 'City, area or full address',
-                          prefixIcon: Icon(Icons.location_on_outlined)),
-                      validator: requiredField),
-                  const SizedBox(height: 17),
-                  const FieldLabel('Shipment details'),
-                  TextFormField(
-                      maxLines: 3,
-                      decoration: const InputDecoration(
-                          hintText:
-                              'Describe size, weight and any special handling needs'),
-                      validator: requiredField),
-                  const SizedBox(height: 22),
-                  SizedBox(
-                    width: double.infinity,
-                    child: FilledButton(
-                      onPressed: () {
-                        if (formKey.currentState!.validate()) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                                content: Text(
-                                    'Form validated. Connect a backend to submit real bookings.')),
-                          );
-                        }
-                      },
-                      style: FilledButton.styleFrom(
-                          padding: const EdgeInsets.all(16),
-                          backgroundColor: KKCoinsApp.blue),
-                      child: const Text('Continue to estimate'),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  const Text('No payment is collected in this prototype.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.black54, fontSize: 12)),
-                ]),
-          ),
-        ],
-      );
-}
-
-String? requiredField(String? value) =>
-    (value == null || value.trim().isEmpty) ? 'Please fill in this field' : null;
-
-class TrackingScreen extends StatefulWidget {
-  const TrackingScreen({super.key});
-  @override
-  State<TrackingScreen> createState() => _TrackingScreenState();
-}
-
-class _TrackingScreenState extends State<TrackingScreen> {
-  final controller = TextEditingController();
-  bool searched = false;
+class _LoginScreenState extends State<LoginScreen> {
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
 
   @override
   void dispose() {
-    controller.dispose();
+    emailController.dispose();
+    passwordController.dispose();
     super.dispose();
   }
 
   @override
-  Widget build(BuildContext context) => ListView(
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Login')),
+      body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
-          const ScreenTitle(
-              title: 'Track a shipment',
-              subtitle: 'Stay updated from pickup to delivery.'),
-          const SizedBox(height: 23),
-          const FieldLabel('Tracking number'),
-          Row(children: [
-            Expanded(
-                child: TextField(
-                    controller: controller,
-                    decoration: const InputDecoration(
-                        hintText: 'e.g. KKCG-2048',
-                        prefixIcon: Icon(Icons.qr_code_2)))),
-            const SizedBox(width: 10),
-            FilledButton(
-                onPressed: () => setState(
-                    () => searched = controller.text.trim().isNotEmpty),
-                style: FilledButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 17, horizontal: 17)),
-                child: const Text('Track')),
-          ]),
-          if (searched) ...[
-            const SizedBox(height: 24),
-            Card(
-              elevation: 0,
-              color: Colors.white,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20)),
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(controller.text.trim(),
-                          style: const TextStyle(
-                              fontWeight: FontWeight.w800,
-                              color: KKCoinsApp.navy)),
-                      const SizedBox(height: 7),
-                      const Text('Lagos, Nigeria  →  Abuja, Nigeria',
-                          style: TextStyle(color: Colors.black54)),
-                      const SizedBox(height: 22),
-                      const StatusStep(
-                          title: 'Booking confirmed',
-                          subtitle: 'Shipment request received',
-                          complete: true),
-                      const StatusStep(
-                          title: 'Picked up',
-                          subtitle: 'Collected from sender',
-                          complete: true),
-                      const StatusStep(
-                          title: 'In transit',
-                          subtitle: 'On the way to destination',
-                          complete: false),
-                      const StatusStep(
-                          title: 'Delivered',
-                          subtitle: 'Awaiting delivery',
-                          complete: false,
-                          last: true),
-                    ]),
-              ),
+          const Text('Welcome back', style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800, color: KKCoinsGlobalConnectApp.navy)),
+          const SizedBox(height: 20),
+          TextField(controller: emailController, decoration: const InputDecoration(labelText: 'Email address', prefixIcon: Icon(Icons.email_outlined))),
+          const SizedBox(height: 14),
+          TextField(controller: passwordController, obscureText: true, decoration: const InputDecoration(labelText: 'Password', prefixIcon: Icon(Icons.lock_outline))),
+          const SizedBox(height: 22),
+          FilledButton(
+            onPressed: () {
+              widget.onLogin(emailController.text, passwordController.text);
+              Navigator.of(context).pop();
+            },
+            style: FilledButton.styleFrom(
+              backgroundColor: KKCoinsGlobalConnectApp.blue,
+              padding: const EdgeInsets.all(16),
             ),
-            const SizedBox(height: 10),
-            const Text(
-                'Demo status only. Live tracking requires a connected logistics backend.',
-                style: TextStyle(color: Colors.black54, fontSize: 12)),
-          ] else ...[
-            const SizedBox(height: 45),
-            const Icon(Icons.route_outlined,
-                size: 74, color: Color(0xFFB8C6DA)),
-            const SizedBox(height: 14),
-            const Text('Your delivery journey,\nall in one view.',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                    color: KKCoinsApp.navy)),
-            const SizedBox(height: 8),
-            const Text(
-                'Enter a tracking number above to view shipment progress.',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.black54)),
-          ],
+            child: const Text('Login'),
+          ),
         ],
-      );
+      ),
+    );
+  }
 }
 
-class AccountScreen extends StatelessWidget {
-  const AccountScreen({super.key});
+class CustomerDashboardScreen extends StatelessWidget {
+  const CustomerDashboardScreen({
+    super.key,
+    required this.username,
+    required this.bookings,
+    required this.onLogout,
+  });
+
+  final String username;
+  final List<Map<String, dynamic>> bookings;
+  final VoidCallback onLogout;
 
   @override
-  Widget build(BuildContext context) => ListView(
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Hello, $username'),
+        actions: [
+          IconButton(onPressed: onLogout, icon: const Icon(Icons.logout_rounded)),
+        ],
+      ),
+      body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
-          const ScreenTitle(
-              title: 'Your account',
-              subtitle: 'Manage your profile and preferences.'),
-          const SizedBox(height: 22),
-          Card(
-            elevation: 0,
-            color: Colors.white,
-            child: ListTile(
-              leading: const CircleAvatar(
-                  backgroundColor: Color(0xFFEAF1FC),
-                  child: Icon(Icons.person_outline, color: KKCoinsApp.blue)),
-              title: const Text('Guest user'),
-              subtitle: const Text('Sign in to manage deliveries'),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                      content: Text(
-                          'Authentication will be connected in a future step.'))),
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              gradient: const LinearGradient(
+                colors: [KKCoinsGlobalConnectApp.navy, KKCoinsGlobalConnectApp.blue],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Available balance', style: TextStyle(color: Colors.white70)),
+                const SizedBox(height: 10),
+                const Text('₦250,000', style: TextStyle(color: Colors.white, fontSize: 30, fontWeight: FontWeight.w800)),
+                const SizedBox(height: 16),
+                FilledButton.icon(
+                  onPressed: () {},
+                  icon: const Icon(Icons.add_circle_outline),
+                  style: FilledButton.styleFrom(backgroundColor: KKCoinsGlobalConnectApp.gold, foregroundColor: KKCoinsGlobalConnectApp.navy),
+                  label: const Text('Send package'),
+                ),
+              ],
             ),
           ),
+          const SizedBox(height: 24),
+          const Text('Recent shipments', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: KKCoinsGlobalConnectApp.navy)),
           const SizedBox(height: 12),
-          const AccountOption(
-              icon: Icons.receipt_long_outlined, title: 'My deliveries'),
-          const AccountOption(
-              icon: Icons.support_agent_outlined, title: 'Help and support'),
-          const AccountOption(
-              icon: Icons.privacy_tip_outlined, title: 'Privacy and terms'),
-          const SizedBox(height: 16),
-          const Text('K.K Coins Global Connect • App foundation v0.1',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.black45, fontSize: 12)),
+          ...bookings.map((item) => Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 42,
+                      height: 42,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFEAF1FC),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(Icons.local_shipping_outlined, color: KKCoinsGlobalConnectApp.blue),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(item['id'], style: const TextStyle(fontWeight: FontWeight.w800, color: KKCoinsGlobalConnectApp.navy)),
+                          const SizedBox(height: 4),
+                          Text(item['route'], style: const TextStyle(color: Colors.black54)),
+                        ],
+                      ),
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(item['amount'], style: const TextStyle(fontWeight: FontWeight.w700, color: KKCoinsGlobalConnectApp.navy)),
+                        const SizedBox(height: 6),
+                        Text(item['status'], style: const TextStyle(fontSize: 12, color: Colors.black54)),
+                      ],
+                    )
+                  ],
+                ),
+              )),
         ],
-      );
+      ),
+    );
+  }
+}
+
+class OwnerDashboardScreen extends StatelessWidget {
+  const OwnerDashboardScreen({
+    super.key,
+    required this.username,
+    required this.transfers,
+    required this.onLogout,
+  });
+
+  final String username;
+  final List<Map<String, dynamic>> transfers;
+  final VoidCallback onLogout;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('$username • CEO Portal'),
+        actions: [
+          IconButton(onPressed: onLogout, icon: const Icon(Icons.logout_rounded)),
+        ],
+      ),
+      body: ListView(
+        padding: const EdgeInsets.all(20),
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: SummaryCard(label: 'Total revenue', value: '₦1.2M', color: KKCoinsGlobalConnectApp.navy),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: SummaryCard(label: 'Active users', value: '1,426', color: KKCoinsGlobalConnectApp.blue),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              Expanded(
+                child: SummaryCard(label: 'Transfers', value: '17', color: KKCoinsGlobalConnectApp.gold),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: SummaryCard(label: 'Pending', value: '6', color: const Color(0xFF27836E)),
+              ),
+            ],
+          ),
+          const SizedBox(height: 26),
+          const Text('Direct transfer approvals', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: KKCoinsGlobalConnectApp.navy)),
+          const SizedBox(height: 12),
+          ...transfers.map((transfer) => Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(transfer['customer'], style: const TextStyle(fontWeight: FontWeight.w700, color: KKCoinsGlobalConnectApp.navy)),
+                        ),
+                        Text(transfer['amount'], style: const TextStyle(fontWeight: FontWeight.w800, color: KKCoinsGlobalConnectApp.blue)),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(transfer['method'], style: const TextStyle(color: Colors.black54)),
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFEAF1FC),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(transfer['status'], style: const TextStyle(fontSize: 12, color: KKCoinsGlobalConnectApp.navy)),
+                        ),
+                        const Spacer(),
+                        TextButton(onPressed: () {}, child: const Text('Approve')),
+                      ],
+                    ),
+                  ],
+                ),
+              )),
+        ],
+      ),
+    );
+  }
+}
+
+class SummaryCard extends StatelessWidget {
+  const SummaryCard({
+    super.key,
+    required this.label,
+    required this.value,
+    required this.color,
+  });
+
+  final String label;
+  final String value;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: const TextStyle(color: Colors.white70)),
+          const SizedBox(height: 8),
+          Text(value, style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w800)),
+        ],
+      ),
+    );
+  }
 }
 
 class BrandMark extends StatelessWidget {
@@ -497,195 +632,110 @@ class BrandMark extends StatelessWidget {
   final double size;
 
   @override
-  Widget build(BuildContext context) => Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-            color: KKCoinsApp.navy,
-            borderRadius: BorderRadius.circular(size * .31)),
-        child: Center(
-          child: Stack(alignment: Alignment.center, children: [
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: KKCoinsGlobalConnectApp.navy,
+        borderRadius: BorderRadius.circular(size * .31),
+      ),
+      child: Center(
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
             Icon(Icons.public, color: Colors.white, size: size * .62),
             Positioned(
-                right: size * .04,
-                bottom: size * .04,
-                child: Icon(Icons.local_shipping,
-                    color: KKCoinsApp.gold, size: size * .36)),
-          ]),
-        ),
-      );
-}
-
-class SectionHeading extends StatelessWidget {
-  const SectionHeading({super.key, required this.title, required this.subtitle});
-  final String title;
-  final String subtitle;
-
-  @override
-  Widget build(BuildContext context) => Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(title,
-              style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
-                  color: KKCoinsApp.navy)),
-          const SizedBox(height: 4),
-          Text(subtitle,
-              style: const TextStyle(fontSize: 12, color: Colors.black54)),
-        ],
-      );
-}
-
-class ServiceCard extends StatelessWidget {
-  const ServiceCard(
-      {super.key,
-      required this.icon,
-      required this.title,
-      required this.color,
-      required this.onTap});
-  final IconData icon;
-  final String title;
-  final Color color;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) => InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(18),
-        child: Container(
-          padding: const EdgeInsets.all(15),
-          decoration: BoxDecoration(
-              color: Colors.white, borderRadius: BorderRadius.circular(18)),
-          child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                    width: 42,
-                    height: 42,
-                    decoration: BoxDecoration(
-                        color: color.withOpacity(.12),
-                        borderRadius: BorderRadius.circular(13)),
-                    child: Icon(icon, color: color)),
-                const SizedBox(height: 15),
-                Text(title,
-                    style: const TextStyle(
-                        fontWeight: FontWeight.w700,
-                        color: KKCoinsApp.navy)),
-              ]),
-        ),
-      );
-}
-
-class ScreenTitle extends StatelessWidget {
-  const ScreenTitle({super.key, required this.title, required this.subtitle});
-  final String title;
-  final String subtitle;
-
-  @override
-  Widget build(BuildContext context) => Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(title,
-              style: const TextStyle(
-                  fontSize: 26,
-                  fontWeight: FontWeight.w800,
-                  color: KKCoinsApp.navy)),
-          const SizedBox(height: 6),
-          Text(subtitle, style: const TextStyle(color: Colors.black54)),
-        ],
-      );
-}
-
-class FieldLabel extends StatelessWidget {
-  const FieldLabel(this.text, {super.key});
-  final String text;
-
-  @override
-  Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.only(bottom: 8),
-        child: Text(text,
-            style: const TextStyle(
-                fontWeight: FontWeight.w700, color: KKCoinsApp.navy)),
-      );
-}
-
-class StatusStep extends StatelessWidget {
-  const StatusStep(
-      {super.key,
-      required this.title,
-      required this.subtitle,
-      required this.complete,
-      this.last = false});
-  final String title;
-  final String subtitle;
-  final bool complete;
-  final bool last;
-
-  @override
-  Widget build(BuildContext context) => IntrinsicHeight(
-        child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          SizedBox(
-            width: 26,
-            child: Column(children: [
-              Container(
-                width: 20,
-                height: 20,
-                decoration: BoxDecoration(
-                    color: complete
-                        ? const Color(0xFFE8F5EF)
-                        : const Color(0xFFF0F2F5),
-                    shape: BoxShape.circle),
-                child: Icon(complete ? Icons.check : Icons.circle,
-                    size: complete ? 13 : 7,
-                    color: complete
-                        ? const Color(0xFF27836E)
-                        : Colors.black26),
-              ),
-              if (!last)
-                Expanded(
-                    child: Container(
-                        width: 2,
-                        color: complete
-                            ? const Color(0xFFB9DCCB)
-                            : const Color(0xFFE1E5EA))),
-            ]),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.only(bottom: 20),
-              child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(title,
-                        style: TextStyle(
-                            fontWeight: FontWeight.w700,
-                            color: complete ? KKCoinsApp.navy : Colors.black54)),
-                    const SizedBox(height: 3),
-                    Text(subtitle,
-                        style: const TextStyle(
-                            fontSize: 12, color: Colors.black45)),
-                  ]),
+              right: size * .04,
+              bottom: size * .04,
+              child: Icon(Icons.local_shipping, color: KKCoinsGlobalConnectApp.gold, size: size * .36),
             ),
-          ),
-        ]),
-      );
+          ],
+        ),
+      ),
+    );
+  }
 }
 
-class AccountOption extends StatelessWidget {
-  const AccountOption({super.key, required this.icon, required this.title});
-  final IconData icon;
-  final String title;
 
-  @override
-  Widget build(BuildContext context) => Card(
-        elevation: 0,
-        color: Colors.white,
-        child: ListTile(
-            leading: Icon(icon, color: KKCoinsApp.blue),
-            title: Text(title),
-            trailing: const Icon(Icons.chevron_right, color: Colors.black45),
-            onTap: () {}),
-      );
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
