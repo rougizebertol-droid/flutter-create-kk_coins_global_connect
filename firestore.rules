@@ -1,0 +1,74 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    // Admin status must be assigned by a trusted Admin SDK environment,
+    // never by a client write to a Firestore profile.
+    function isAdmin() {
+      return signedIn() && request.auth.token.admin == true;
+    }
+
+    function owns(resourceData) {
+      return signedIn() && resourceData.customerId == request.auth.uid;
+    }
+
+    match /users/{userId} {
+      allow create: if signedIn()
+        && request.auth.uid == userId
+        && request.resource.data.keys().hasOnly(['displayName', 'email', 'phone', 'createdAt'])
+        && request.resource.data.email == request.auth.token.email;
+
+      allow read: if signedIn() && (request.auth.uid == userId || isAdmin());
+
+      allow update: if signedIn()
+        && request.auth.uid == userId
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['displayName', 'phone']);
+
+      allow delete: if isAdmin();
+    }
+
+    match /shipments/{shipmentId} {
+      allow create: if signedIn()
+        && request.resource.data.customerId == request.auth.uid
+        && request.resource.data.status == 'requested'
+        && request.resource.data.paymentStatus == 'unpaid'
+        && request.resource.data.keys().hasOnly([
+          'customerId', 'serviceType', 'pickup', 'destination', 'description',
+          'quotedAmount', 'status', 'paymentStatus', 'createdAt', 'updatedAt'
+        ]);
+
+      allow read: if isAdmin() || owns(resource.data);
+
+      // Customers cannot change fulfillment or payment state. Admin changes
+      // should be mediated by trusted backend logic for auditable transitions.
+      allow update, delete: if isAdmin();
+    }
+
+    match /transferSubmissions/{submissionId} {
+      allow create: if signedIn()
+        && request.resource.data.customerId == request.auth.uid
+        && request.resource.data.status == 'pending'
+        && request.resource.data.provider in ['moniepoint', 'opay']
+        && request.resource.data.keys().hasOnly([
+          'customerId', 'shipmentId', 'provider', 'transferReference',
+          'proofPath', 'status', 'createdAt'
+        ]);
+
+      allow read: if isAdmin() || owns(resource.data);
+
+      // Do not allow a client, including a customer app, to approve payments.
+      // A trusted server-side process should verify settlement and write review results.
+      allow update, delete: if isAdmin();
+    }
+
+    // No client access to payment-account configuration or arbitrary collections.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
